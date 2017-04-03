@@ -4,14 +4,14 @@
 using namespace std;
 
 /*
- * Greedy Best First Search Algorithm
+ * A* Algorithm
  * Open List: priority_queue
  * Closed List: map
- * Heuristic: Manhatten Distance --> h()
+ * Heuristic: Manhatten Distance + Path traversed to reach here --> h() + g()
  * Initial State: Provide a initial state in same manner as goal state
  * as represented below
  */
-
+ 
 /*
  * Initializing the goal state
  * You can change the goal state as you wish just by changing the string below
@@ -25,7 +25,7 @@ string goal = "12345678 ";
 
 /*
  * This DS is used to maintain closed list in 
- * the 'best-first-search' algorithm
+ * the A* algorithm
  * Key --> Check whether state was visited
  * Value --> Store the parent of current state (used to backtrack to find 
  * the path back to the initial state to display all the states at the end)
@@ -68,23 +68,24 @@ int calculate_heuristic(string curr) {
 }
 
 /*
- * Code to implement best first search algorithm
+ * Code to implement A* algorithm
  * Returns  0 if goal state reached
  * Returns -1 if failed
  */
-int best_first_search(string curr) 
+int A_star(string curr) 
 {
 	/* 
 	 * Priority queue to implement open list
-	 * Format: (heuristic value, current state, parent of current state)
+	 * Format: (h() + g(), g(), current state, parent of current state)
 	 * Note: The heuristic's are stored in negative coz priority_queue returns max value
 	 */
-	priority_queue<pair<int, pair<string, string> > > q;
+	priority_queue<pair<pair<int, int>, pair<string, string> > > q;
 
-	q.push(make_pair(-calculate_heuristic(curr), make_pair(curr, curr)));
+	q.push(make_pair(make_pair(-(calculate_heuristic(curr) + 1), 1), make_pair(curr, curr)));
 	while(!q.empty()) {
 
-		int heuristic = q.top().first;
+		int heuristic = q.top().first.first;
+		int path_val  = q.top().first.second; 
 		string state  = q.top().second.first;
 		string parent = q.top().second.second;
 		string next_parent = state;
@@ -103,8 +104,10 @@ int best_first_search(string curr)
 		 */
 		m[state] = parent;
 
-		// If heuristic is 0, means goal state is reached
-		if (heuristic == 0) {
+		/* If heuristic is 0, means goal state is reached
+		 * Here we have to check only h()
+		 */
+		if ((heuristic + path_val) == 0) {
 			return 0;
 		}
 		// Find index of space in the current state
@@ -125,7 +128,7 @@ int best_first_search(string curr)
 		if (spaceind - 3 > 0) {
 			swap(state[spaceind], state[spaceind-3]);
 			// Add the child state to open list
-			q.push(make_pair(-calculate_heuristic(state), make_pair(state, next_parent)));
+			q.push(make_pair(make_pair(-(calculate_heuristic(state) + path_val + 1), path_val + 1), make_pair(state, next_parent)));
 			// Get back to original state
 			swap(state[spaceind], state[spaceind-3]);
 		}
@@ -139,7 +142,7 @@ int best_first_search(string curr)
 		if (spaceind + 3 < 9) {
 			swap(state[spaceind], state[spaceind+3]);
 			// Add the child state to open list
-			q.push(make_pair(-calculate_heuristic(state), make_pair(state, next_parent)));
+			q.push(make_pair(make_pair(-(calculate_heuristic(state) + path_val + 1), path_val + 1), make_pair(state, next_parent)));
 			// Get back to original state
 			swap(state[spaceind], state[spaceind+3]);
 		}
@@ -153,7 +156,7 @@ int best_first_search(string curr)
 		if (spaceind % 3 != 0) {
 			swap(state[spaceind], state[spaceind-1]);
 			// Add the child state to open list
-			q.push(make_pair(-calculate_heuristic(state), make_pair(state, next_parent)));
+			q.push(make_pair(make_pair(-(calculate_heuristic(state) + path_val + 1), path_val + 1), make_pair(state, next_parent)));
 			// Get back to original state
 			swap(state[spaceind], state[spaceind-1]);	
 		}
@@ -167,7 +170,7 @@ int best_first_search(string curr)
 		if ((spaceind + 1) % 3 != 0) {
 			swap(state[spaceind], state[spaceind+1]);
 			// Add the child state to open list
-			q.push(make_pair(-calculate_heuristic(state), make_pair(state, next_parent)));
+			q.push(make_pair(make_pair(-(calculate_heuristic(state) + path_val + 1), path_val + 1), make_pair(state, next_parent)));
 			// Get back to original state
 			swap(state[spaceind], state[spaceind+1]);
 		}
@@ -205,7 +208,7 @@ int main(int argc, char const *argv[])
 	curr = (char *)malloc(sizeof(char)*9);
 	scanf("%[^\n]s",curr);
 	
-	if (best_first_search(curr) == -1) {
+	if (A_star(curr) == -1) {
 		cout << "Found Some Issue while solving\n\n";
 		return 0;
 	}
